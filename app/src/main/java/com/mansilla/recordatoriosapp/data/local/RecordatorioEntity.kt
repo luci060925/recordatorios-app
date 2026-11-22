@@ -1,5 +1,6 @@
 package com.mansilla.recordatoriosapp.data.local
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -21,18 +22,21 @@ object CodigoOperacion {
 /**
  * Entidad de Room: responde al esquema de la tabla y no se expone a la interfaz.
  *
- * - [id]: UUID estable generado en el dispositivo (tambien identifica al registro en el servicio).
+ * - [id]: UUID estable generado en el dispositivo; es tambien el id del documento en Firestore.
+ * - [ownerUid]: cuenta a la que pertenece el registro. TODAS las consultas lo filtran, de modo
+ *   que una cuenta nunca ve ni modifica los datos locales de otra en el mismo dispositivo.
  * - [version]: aumenta con cada cambio local; permite confirmar una sincronizacion
  *   solo si el registro no cambio mientras se enviaba.
- * - [estadoSync] y [operacionPendiente]: marcan que falta enviar al servicio.
+ * - [estadoSync] y [operacionPendiente]: marcan que falta enviar a la nube.
  *   Una eliminacion queda como operacion pendiente (baja logica) hasta confirmarse.
  */
 @Entity(
     tableName = "recordatorios",
-    indices = [Index("estadoSync"), Index("prioridad"), Index("estado")]
+    indices = [Index("estadoSync"), Index("prioridad"), Index("estado"), Index("ownerUid")]
 )
 data class RecordatorioEntity(
     @PrimaryKey val id: String,
+    @ColumnInfo(defaultValue = "''") val ownerUid: String,
     val titulo: String,
     val descripcion: String?,
     val categoria: String,

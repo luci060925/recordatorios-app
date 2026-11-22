@@ -17,6 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 
 /**
@@ -32,7 +36,10 @@ fun CampoTexto(
     modifier: Modifier = Modifier,
     mensajeError: String? = null,
     ayuda: String? = null,
-    minLineas: Int = 1
+    minLineas: Int = 1,
+    tipoTeclado: KeyboardType = KeyboardType.Text,
+    ocultarTexto: Boolean = false,
+    habilitado: Boolean = true
 ) {
     OutlinedTextField(
         value = valor,
@@ -40,6 +47,10 @@ fun CampoTexto(
         label = { Text(etiqueta) },
         isError = mensajeError != null,
         minLines = minLineas,
+        enabled = habilitado,
+        singleLine = minLineas == 1,
+        keyboardOptions = KeyboardOptions(keyboardType = tipoTeclado),
+        visualTransformation = if (ocultarTexto) PasswordVisualTransformation() else VisualTransformation.None,
         supportingText = {
             when {
                 mensajeError != null -> Text("Error: $mensajeError")

@@ -1,0 +1,25 @@
+{
+  "project_info": {
+    "project_number": "123456789012",
+    "project_id": "demo-recordatorios",
+    "storage_bucket": "demo-recordatorios.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123456789012:android:0123456789abcdef012345",
+        "android_client_info": {
+          "package_name": "com.mansilla.recordatoriosapp.dev"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        { "current_key": "demo-api-key-solo-para-el-emulador" }
+      ],
+      "services": {
+        "appinvite_service": { "other_platform_oauth_client": [] }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

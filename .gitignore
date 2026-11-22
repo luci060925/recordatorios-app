@@ -13,3 +13,21 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# ---------- Actividad 4: secretos y archivos locales ----------
+# Credenciales de firma y claves (nunca al repositorio)
+keystore.properties
+*.jks
+*.keystore
+# Configuracion del proyecto Firebase real (propia de cada equipo)
+app/src/prod/google-services.json
+# Herramientas y registros de Firebase
+firebase-debug.log
+ui-debug.log
+firestore-debug.log
+firebase/rules-tests/node_modules/
+node_modules/
+# Material de entrega generado
+/entrega/
+/entrega3/
+/entrega4/

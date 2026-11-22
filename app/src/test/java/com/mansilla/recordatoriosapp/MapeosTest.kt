@@ -19,8 +19,9 @@ class MapeosTest {
 
     @Test
     fun dtoValido_seTransformaEnEntidadSincronizada() {
-        val e = dto().toEntityOrNull(ahora = 5L)!!
+        val e = dto().toEntityOrNull(uid = "ana", ahora = 5L)!!
         assertEquals("id-1", e.id)
+        assertEquals("ana", e.ownerUid)
         assertEquals(CodigoSync.SINCRONIZADO, e.estadoSync)
         assertNull(e.operacionPendiente)
         assertEquals(100L, e.fecha)
@@ -29,15 +30,15 @@ class MapeosTest {
 
     @Test
     fun dtoSinIdOSinTitulo_seDescarta() {
-        assertNull(dto(id = null).toEntityOrNull(0))
-        assertNull(dto(id = " ").toEntityOrNull(0))
-        assertNull(dto(titulo = null).toEntityOrNull(0))
-        assertNull(dto(titulo = "  ").toEntityOrNull(0))
+        assertNull(dto(id = null).toEntityOrNull("ana", 0))
+        assertNull(dto(id = " ").toEntityOrNull("ana", 0))
+        assertNull(dto(titulo = null).toEntityOrNull("ana", 0))
+        assertNull(dto(titulo = "  ").toEntityOrNull("ana", 0))
     }
 
     @Test
     fun valoresDesconocidos_usanPredeterminados() {
-        val dominio = dto(categoria = "RARA", prioridad = null, estado = "???").toEntityOrNull(0)!!.toDomain()
+        val dominio = dto(categoria = "RARA", prioridad = null, estado = "???").toEntityOrNull("ana", 0)!!.toDomain()
         assertEquals(Categoria.Personal, dominio.categoria)
         assertEquals(Prioridad.Media, dominio.prioridad)
         assertEquals(EstadoRecordatorio.Pendiente, dominio.estado)
@@ -45,7 +46,7 @@ class MapeosTest {
 
     @Test
     fun entidadADominioYDto_conservanLosDatos() {
-        val entidad = dto().toEntityOrNull(0)!!
+        val entidad = dto().toEntityOrNull("ana", 0)!!
         val dominio = entidad.toDomain()
         assertEquals(Categoria.Trabajo, dominio.categoria)
         assertEquals(Prioridad.Alta, dominio.prioridad)
@@ -61,7 +62,7 @@ class MapeosTest {
 
     @Test
     fun estadoDeSyncDesconocido_seTrataComoPendiente() {
-        val entidad = dto().toEntityOrNull(0)!!.copy(estadoSync = "RARO")
+        val entidad = dto().toEntityOrNull("ana", 0)!!.copy(estadoSync = "RARO")
         assertEquals(EstadoSync.PENDIENTE, entidad.toDomain().estadoSync)
     }
 }

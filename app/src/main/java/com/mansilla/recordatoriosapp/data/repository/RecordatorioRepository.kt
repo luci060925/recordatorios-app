@@ -21,7 +21,7 @@ data class FiltroRecordatorios(
     val incluirCompletados: Boolean = true
 )
 
-enum class TipoErrorSync { SIN_CONEXION, TIMEOUT, SERVIDOR, SOLICITUD_INVALIDA, DESCONOCIDO }
+enum class TipoErrorSync { SIN_CONEXION, TIMEOUT, SERVIDOR, SOLICITUD_INVALIDA, SIN_PERMISO, SESION_INVALIDA, DESCONOCIDO }
 
 /** Estado de la sincronizacion con el servicio remoto, observable desde la interfaz. */
 sealed interface EstadoSincronizacion {
@@ -34,6 +34,9 @@ sealed interface EstadoSincronizacion {
 sealed interface ResultadoSincronizacion {
     data object Completada : ResultadoSincronizacion
     data object YaEnCurso : ResultadoSincronizacion
+
+    /** No hay una cuenta con sesion iniciada: no hay nada que sincronizar. */
+    data object SinSesion : ResultadoSincronizacion
     data class Fallida(val tipo: TipoErrorSync, val mensaje: String) : ResultadoSincronizacion
 }
 
@@ -43,7 +46,8 @@ data class ResumenPendientes(val pendientes: Int = 0, val conError: Int = 0)
 /**
  * Unico punto de acceso a los datos para los ViewModel. Room es la fuente de verdad:
  * toda lectura sale de la base local y toda escritura se aplica primero en ella.
- * La conectividad y los DTO quedan encapsulados en la implementacion.
+ * Todo se limita a la cuenta con sesion activa: sin sesion no hay datos que leer ni escribir.
+ * La conectividad, Firebase y los DTO quedan encapsulados en la implementacion.
  */
 interface RecordatorioRepository {
 
@@ -71,4 +75,14 @@ interface RecordatorioRepository {
 
     /** Ejecuta una sincronizacion; si ya hay una en curso devuelve YaEnCurso sin repetir el envio. */
     suspend fun sincronizar(reintentarErrores: Boolean = false): ResultadoSincronizacion
+
+    /**
+     * Paso previo al cierre de sesion: intenta enviar lo pendiente y luego borra de este
+     * dispositivo los datos de la cuenta que ya estan en la nube. Devuelve cuantos cambios
+     * quedaron sin sincronizar (se conservan, asociados a la cuenta, para no perderlos).
+     */
+    suspend fun prepararCierreDeSesion(): Int
+
+    /** Cantidad de cambios de la cuenta activa que todavia no estan en la nube. */
+    suspend fun contarSinSincronizar(): Int
 }

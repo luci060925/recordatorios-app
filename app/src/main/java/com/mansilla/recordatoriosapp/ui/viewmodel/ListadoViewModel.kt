@@ -2,6 +2,8 @@ package com.mansilla.recordatoriosapp.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mansilla.recordatoriosapp.data.auth.EstadoAuth
+import com.mansilla.recordatoriosapp.data.auth.ProveedorSesion
 import com.mansilla.recordatoriosapp.data.prefs.FiltroPrioridad
 import com.mansilla.recordatoriosapp.data.prefs.PreferenciasRepository
 import com.mansilla.recordatoriosapp.data.prefs.PreferenciasUsuario
@@ -30,8 +32,15 @@ import kotlinx.coroutines.flow.update
 @OptIn(ExperimentalCoroutinesApi::class)
 class ListadoViewModel(
     private val repositorio: RecordatorioRepository,
-    preferenciasRepositorio: PreferenciasRepository
+    preferenciasRepositorio: PreferenciasRepository,
+    sesion: ProveedorSesion
 ) : ViewModel() {
+
+    /** Correo de la cuenta cuyos recordatorios se muestran. */
+    val correo: StateFlow<String?> = sesion.estado
+        .map { (it as? EstadoAuth.ConSesion)?.usuario?.email }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(TIEMPO_ESPERA_MS), null)
+
 
     private val reintentos = MutableStateFlow(0)
 

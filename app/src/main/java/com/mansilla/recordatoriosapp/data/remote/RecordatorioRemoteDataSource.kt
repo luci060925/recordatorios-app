@@ -1,29 +1,16 @@
 package com.mansilla.recordatoriosapp.data.remote
 
-import retrofit2.HttpException
-
-/** Fuente remota: devuelve siempre un [ResultadoRed], nunca lanza excepciones de red. */
+/**
+ * Fuente remota de recordatorios de UNA cuenta. Todas las operaciones reciben el uid
+ * explicitamente: una sincronizacion nunca mezcla cuentas aunque la sesion cambie mientras corre.
+ * Devuelve siempre un [ResultadoRed]; nunca lanza excepciones del proveedor.
+ */
 interface RecordatorioRemoteDataSource {
-    suspend fun obtenerTodos(): ResultadoRed<List<RecordatorioDto>>
-    suspend fun crear(dto: RecordatorioDto): ResultadoRed<RecordatorioDto>
-    suspend fun actualizar(dto: RecordatorioDto): ResultadoRed<RecordatorioDto>
-    suspend fun eliminar(id: String): ResultadoRed<Unit>
-}
+    suspend fun obtenerTodos(uid: String): ResultadoRed<List<RecordatorioDto>>
 
-class RetrofitRecordatorioRemoteDataSource(
-    private val api: RecordatorioApi
-) : RecordatorioRemoteDataSource {
+    /** Crea el recordatorio o, si ya existe con ese id, lo reemplaza (idempotente). */
+    suspend fun guardar(uid: String, dto: RecordatorioDto): ResultadoRed<Unit>
 
-    override suspend fun obtenerTodos() = llamadaSegura { api.obtenerTodos() }
-
-    override suspend fun crear(dto: RecordatorioDto) = llamadaSegura { api.crear(dto) }
-
-    override suspend fun actualizar(dto: RecordatorioDto) = llamadaSegura {
-        api.actualizar(requireNotNull(dto.id), dto)
-    }
-
-    override suspend fun eliminar(id: String) = llamadaSegura {
-        val respuesta = api.eliminar(id)
-        if (!respuesta.isSuccessful) throw HttpException(respuesta)
-    }
+    /** Elimina el recordatorio; si ya no existe tambien es exito. */
+    suspend fun eliminar(uid: String, id: String): ResultadoRed<Unit>
 }

@@ -15,7 +15,7 @@ class AppViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T = when {
         modelClass.isAssignableFrom(ListadoViewModel::class.java) ->
-            ListadoViewModel(contenedor.repositorio, contenedor.preferenciasRepository)
+            ListadoViewModel(contenedor.repositorio, contenedor.preferenciasRepository, contenedor.authRepository)
 
         modelClass.isAssignableFrom(DetalleViewModel::class.java) ->
             DetalleViewModel(contenedor.repositorio)
@@ -24,7 +24,13 @@ class AppViewModelFactory(
             FormularioViewModel(contenedor.repositorio)
 
         modelClass.isAssignableFrom(AjustesViewModel::class.java) ->
-            AjustesViewModel(contenedor.preferenciasRepository, contenedor.controlServicioSimulado)
+            AjustesViewModel(contenedor.preferenciasRepository, contenedor.authRepository, contenedor.repositorio)
+
+        modelClass.isAssignableFrom(AccesoViewModel::class.java) ->
+            AccesoViewModel(contenedor.authRepository)
+
+        modelClass.isAssignableFrom(SesionViewModel::class.java) ->
+            SesionViewModel(contenedor.authRepository)
 
         else -> throw IllegalArgumentException("ViewModel desconocido: ${modelClass.name}")
     } as T

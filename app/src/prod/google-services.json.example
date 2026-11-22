@@ -1,0 +1,26 @@
+{
+  "_comentario": "Copiar como google-services.json (en esta carpeta) y reemplazar por el archivo descargado de la consola de Firebase del proyecto real. google-services.json esta en .gitignore.",
+  "project_info": {
+    "project_number": "REEMPLAZAR",
+    "project_id": "REEMPLAZAR-id-del-proyecto",
+    "storage_bucket": "REEMPLAZAR.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "REEMPLAZAR",
+        "android_client_info": {
+          "package_name": "com.mansilla.recordatoriosapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        { "current_key": "REEMPLAZAR" }
+      ],
+      "services": {
+        "appinvite_service": { "other_platform_oauth_client": [] }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

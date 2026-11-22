@@ -1,0 +1,144 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "a08a69db66a87a0b4ed3ec84c835fe38",
+    "entities": [
+      {
+        "tableName": "recordatorios",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `ownerUid` TEXT NOT NULL DEFAULT '', `titulo` TEXT NOT NULL, `descripcion` TEXT, `categoria` TEXT NOT NULL, `prioridad` TEXT NOT NULL, `estado` TEXT NOT NULL, `fecha` INTEGER NOT NULL, `actualizadoEn` INTEGER NOT NULL, `version` INTEGER NOT NULL, `estadoSync` TEXT NOT NULL, `operacionPendiente` TEXT, `ultimoError` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ownerUid",
+            "columnName": "ownerUid",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "titulo",
+            "columnName": "titulo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descripcion",
+            "columnName": "descripcion",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "categoria",
+            "columnName": "categoria",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "prioridad",
+            "columnName": "prioridad",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estado",
+            "columnName": "estado",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fecha",
+            "columnName": "fecha",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "actualizadoEn",
+            "columnName": "actualizadoEn",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estadoSync",
+            "columnName": "estadoSync",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "operacionPendiente",
+            "columnName": "operacionPendiente",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "ultimoError",
+            "columnName": "ultimoError",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_recordatorios_estadoSync",
+            "unique": false,
+            "columnNames": [
+              "estadoSync"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recordatorios_estadoSync` ON `${TABLE_NAME}` (`estadoSync`)"
+          },
+          {
+            "name": "index_recordatorios_prioridad",
+            "unique": false,
+            "columnNames": [
+              "prioridad"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recordatorios_prioridad` ON `${TABLE_NAME}` (`prioridad`)"
+          },
+          {
+            "name": "index_recordatorios_estado",
+            "unique": false,
+            "columnNames": [
+              "estado"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recordatorios_estado` ON `${TABLE_NAME}` (`estado`)"
+          },
+          {
+            "name": "index_recordatorios_ownerUid",
+            "unique": false,
+            "columnNames": [
+              "ownerUid"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_recordatorios_ownerUid` ON `${TABLE_NAME}` (`ownerUid`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a08a69db66a87a0b4ed3ec84c835fe38')"
+    ]
+  }
+}

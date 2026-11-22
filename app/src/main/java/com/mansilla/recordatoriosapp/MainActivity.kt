@@ -11,7 +11,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mansilla.recordatoriosapp.data.prefs.TemaApp
-import com.mansilla.recordatoriosapp.ui.navigation.RecordatoriosNavHost
+import com.mansilla.recordatoriosapp.ui.navigation.RaizApp
 import com.mansilla.recordatoriosapp.ui.theme.RecordatoriosAppTheme
 import com.mansilla.recordatoriosapp.ui.viewmodel.AppViewModelFactory
 import java.text.SimpleDateFormat
@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
             RecordatoriosAppTheme(darkTheme = oscuro) {
                 // Hasta leer las preferencias no se dibuja contenido, para evitar un parpadeo de tema.
                 if (preferencias != null) {
-                    RecordatoriosNavHost(viewModelFactory = viewModelFactory)
+                    RaizApp(viewModelFactory = viewModelFactory)
                 }
             }
         }

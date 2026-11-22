@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SOLO ambiente dev: permite HTTP sin cifrar unicamente hacia la PC que corre el
+  Firebase Emulator Suite (10.0.2.2 desde el emulador de Android). El ambiente prod
+  no incluye esta configuracion y solo admite HTTPS.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

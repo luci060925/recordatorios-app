@@ -9,58 +9,60 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Acceso a la tabla de recordatorios. Solo lo usa el repositorio: ni las
- * pantallas ni los ViewModel acceden al DAO.
+ * Acceso a la tabla de recordatorios. Solo lo usa el repositorio: ni las pantallas ni los
+ * ViewModel acceden al DAO.
  *
- * Las consultas que consume la interfaz devuelven Flow, por lo que Room
- * vuelve a emitir cada vez que cambia la tabla.
+ * Todas las consultas reciben el uid de la cuenta (ownerUid): los datos de una cuenta son
+ * invisibles para las demas aunque compartan el dispositivo.
+ * Las consultas que consume la interfaz devuelven Flow, por lo que Room vuelve a emitir
+ * cada vez que cambia la tabla.
  */
 @Dao
 interface RecordatorioDao {
 
     // ---------- Consultas observables (interfaz) ----------
 
-    /** Listado completo, sin los registros marcados para eliminar. */
+    /** Listado completo de la cuenta, sin los registros marcados para eliminar. */
     @Query(
-        "SELECT * FROM recordatorios " +
-            "WHERE operacionPendiente IS NULL OR operacionPendiente != 'ELIMINAR' " +
-            "ORDER BY fecha DESC"
-    )
-    fun observarTodos(): Flow<List<RecordatorioEntity>>
-
-    /** Un recordatorio por identificador. */
-    @Query(
-        "SELECT * FROM recordatorios WHERE id = :id " +
-            "AND (operacionPendiente IS NULL OR operacionPendiente != 'ELIMINAR')"
-    )
-    fun observarPorId(id: String): Flow<RecordatorioEntity?>
-
-    /** Filtro por estado (PENDIENTE, COMPLETADO, CANCELADO). */
-    @Query(
-        "SELECT * FROM recordatorios WHERE estado = :estado " +
+        "SELECT * FROM recordatorios WHERE ownerUid = :uid " +
             "AND (operacionPendiente IS NULL OR operacionPendiente != 'ELIMINAR') " +
             "ORDER BY fecha DESC"
     )
-    fun observarPorEstado(estado: String): Flow<List<RecordatorioEntity>>
+    fun observarTodos(uid: String): Flow<List<RecordatorioEntity>>
+
+    /** Un recordatorio por identificador (solo si pertenece a la cuenta). */
+    @Query(
+        "SELECT * FROM recordatorios WHERE ownerUid = :uid AND id = :id " +
+            "AND (operacionPendiente IS NULL OR operacionPendiente != 'ELIMINAR')"
+    )
+    fun observarPorId(uid: String, id: String): Flow<RecordatorioEntity?>
+
+    /** Filtro por estado (PENDIENTE, COMPLETADO, CANCELADO). */
+    @Query(
+        "SELECT * FROM recordatorios WHERE ownerUid = :uid AND estado = :estado " +
+            "AND (operacionPendiente IS NULL OR operacionPendiente != 'ELIMINAR') " +
+            "ORDER BY fecha DESC"
+    )
+    fun observarPorEstado(uid: String, estado: String): Flow<List<RecordatorioEntity>>
 
     /**
      * Filtro combinado que usan las preferencias: prioridad opcional (null = todas)
      * y posibilidad de ocultar los completados.
      */
     @Query(
-        "SELECT * FROM recordatorios " +
-            "WHERE (operacionPendiente IS NULL OR operacionPendiente != 'ELIMINAR') " +
+        "SELECT * FROM recordatorios WHERE ownerUid = :uid " +
+            "AND (operacionPendiente IS NULL OR operacionPendiente != 'ELIMINAR') " +
             "AND (:prioridad IS NULL OR prioridad = :prioridad) " +
             "AND (:incluirCompletados = 1 OR estado != 'COMPLETADO') " +
             "ORDER BY fecha DESC"
     )
-    fun observarFiltrados(prioridad: String?, incluirCompletados: Boolean): Flow<List<RecordatorioEntity>>
+    fun observarFiltrados(uid: String, prioridad: String?, incluirCompletados: Boolean): Flow<List<RecordatorioEntity>>
 
-    @Query("SELECT COUNT(*) FROM recordatorios WHERE estadoSync = 'PENDIENTE'")
-    fun observarCantidadPendientes(): Flow<Int>
+    @Query("SELECT COUNT(*) FROM recordatorios WHERE ownerUid = :uid AND estadoSync = 'PENDIENTE'")
+    fun observarCantidadPendientes(uid: String): Flow<Int>
 
-    @Query("SELECT COUNT(*) FROM recordatorios WHERE estadoSync = 'ERROR'")
-    fun observarCantidadConError(): Flow<Int>
+    @Query("SELECT COUNT(*) FROM recordatorios WHERE ownerUid = :uid AND estadoSync = 'ERROR'")
+    fun observarCantidadConError(uid: String): Flow<Int>
 
     // ---------- Operaciones de escritura ----------
 
@@ -76,20 +78,20 @@ interface RecordatorioDao {
     @Delete
     suspend fun eliminar(entidad: RecordatorioEntity)
 
-    @Query("DELETE FROM recordatorios WHERE id IN (:ids)")
-    suspend fun eliminarPorIds(ids: List<String>)
+    @Query("DELETE FROM recordatorios WHERE ownerUid = :uid AND id IN (:ids)")
+    suspend fun eliminarPorIds(uid: String, ids: List<String>)
 
     // ---------- Soporte de sincronizacion ----------
 
-    @Query("SELECT * FROM recordatorios WHERE id = :id")
-    suspend fun obtenerPorId(id: String): RecordatorioEntity?
+    @Query("SELECT * FROM recordatorios WHERE ownerUid = :uid AND id = :id")
+    suspend fun obtenerPorId(uid: String, id: String): RecordatorioEntity?
 
-    @Query("SELECT * FROM recordatorios")
-    suspend fun obtenerTodosParaSync(): List<RecordatorioEntity>
+    @Query("SELECT * FROM recordatorios WHERE ownerUid = :uid")
+    suspend fun obtenerTodosParaSync(uid: String): List<RecordatorioEntity>
 
-    /** Registros que falta enviar, del mas antiguo al mas nuevo. */
-    @Query("SELECT * FROM recordatorios WHERE estadoSync = 'PENDIENTE' ORDER BY actualizadoEn ASC")
-    suspend fun obtenerPendientes(): List<RecordatorioEntity>
+    /** Registros de la cuenta que falta enviar, del mas antiguo al mas nuevo. */
+    @Query("SELECT * FROM recordatorios WHERE ownerUid = :uid AND estadoSync = 'PENDIENTE' ORDER BY actualizadoEn ASC")
+    suspend fun obtenerPendientes(uid: String): List<RecordatorioEntity>
 
     /** Confirma el envio solo si el registro no cambio mientras se sincronizaba. */
     @Query(
@@ -108,6 +110,17 @@ interface RecordatorioDao {
     suspend fun marcarError(id: String, version: Int, mensaje: String): Int
 
     /** Reintento manual: los registros rechazados vuelven a pendientes. */
-    @Query("UPDATE recordatorios SET estadoSync = 'PENDIENTE', ultimoError = NULL WHERE estadoSync = 'ERROR'")
-    suspend fun reactivarErrores(): Int
+    @Query("UPDATE recordatorios SET estadoSync = 'PENDIENTE', ultimoError = NULL WHERE ownerUid = :uid AND estadoSync = 'ERROR'")
+    suspend fun reactivarErrores(uid: String): Int
+
+    /**
+     * Al cerrar sesion se borra de este dispositivo lo que ya esta guardado en la nube.
+     * Lo que todavia no se sincronizo se conserva (para no perder cambios), siempre
+     * asociado a su cuenta y oculto para cualquier otra.
+     */
+    @Query("DELETE FROM recordatorios WHERE ownerUid = :uid AND estadoSync = 'SINCRONIZADO'")
+    suspend fun purgarSincronizados(uid: String): Int
+
+    @Query("SELECT COUNT(*) FROM recordatorios WHERE ownerUid = :uid AND estadoSync != 'SINCRONIZADO'")
+    suspend fun contarSinSincronizar(uid: String): Int
 }

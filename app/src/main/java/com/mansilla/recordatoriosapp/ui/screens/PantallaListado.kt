@@ -52,9 +52,11 @@ fun PantallaListado(
     val estado by viewModel.listadoState.collectAsStateWithLifecycle()
     val sincronizacion by viewModel.sincronizacion.collectAsStateWithLifecycle()
     val preferencias by viewModel.preferencias.collectAsStateWithLifecycle()
+    val correo by viewModel.correo.collectAsStateWithLifecycle()
 
     ContenidoListado(
         estado = estado,
+        correo = correo,
         sincronizacion = sincronizacion,
         preferencias = preferencias,
         onCrearRecordatorio = onCrearRecordatorio,
@@ -70,6 +72,7 @@ fun PantallaListado(
 @Composable
 fun ContenidoListado(
     estado: ListadoUiState,
+    correo: String?,
     sincronizacion: SincronizacionUiState,
     preferencias: PreferenciasUsuario,
     onCrearRecordatorio: () -> Unit,
@@ -106,6 +109,14 @@ fun ContenidoListado(
                 .padding(innerPadding)
         ) {
             BannerSincronizacion(estado = sincronizacion, onReintentar = onSincronizar)
+
+            if (correo != null) {
+                Text(
+                    text = "Cuenta: $correo",
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)
+                )
+            }
 
             Box(modifier = Modifier.weight(1f)) {
                 // when exhaustivo: nunca se muestran a la vez contenido, carga y error.

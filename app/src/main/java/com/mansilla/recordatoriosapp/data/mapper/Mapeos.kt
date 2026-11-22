@@ -84,17 +84,18 @@ fun RecordatorioEntity.toDto(): RecordatorioDto = RecordatorioDto(
     actualizadoEn = actualizadoEn
 )
 
-// ---------- DTO -> Entidad (datos recibidos del servicio) ----------
+// ---------- DTO -> Entidad (datos recibidos de la nube, asociados a la cuenta uid) ----------
 
 /**
  * Convierte un DTO recibido en una entidad ya sincronizada. Devuelve null si el
  * registro no tiene los datos minimos (identificador y titulo), para descartarlo.
  */
-fun RecordatorioDto.toEntityOrNull(ahora: Long): RecordatorioEntity? {
+fun RecordatorioDto.toEntityOrNull(uid: String, ahora: Long): RecordatorioEntity? {
     val idRecibido = id?.takeIf { it.isNotBlank() } ?: return null
     val tituloRecibido = titulo?.trim()?.takeIf { it.isNotEmpty() } ?: return null
     return RecordatorioEntity(
         id = idRecibido,
+        ownerUid = uid,
         titulo = tituloRecibido,
         descripcion = descripcion?.trim()?.takeIf { it.isNotEmpty() },
         categoria = categoriaDesdeCodigo(categoria).codigo(),
@@ -108,25 +109,3 @@ fun RecordatorioDto.toEntityOrNull(ahora: Long): RecordatorioEntity? {
         ultimoError = null
     )
 }
-
-// ---------- Dominio -> Entidad ----------
-
-/** Entidad lista para guardar como cambio local pendiente de sincronizar. */
-fun Recordatorio.toEntityPendiente(
-    operacion: String = CodigoOperacion.CREAR,
-    version: Int,
-    actualizadoEn: Long
-): RecordatorioEntity = RecordatorioEntity(
-    id = id,
-    titulo = titulo,
-    descripcion = descripcion,
-    categoria = categoria.codigo(),
-    prioridad = prioridad.codigo(),
-    estado = estado.codigo(),
-    fecha = fecha,
-    actualizadoEn = actualizadoEn,
-    version = version,
-    estadoSync = CodigoSync.PENDIENTE,
-    operacionPendiente = operacion,
-    ultimoError = null
-)

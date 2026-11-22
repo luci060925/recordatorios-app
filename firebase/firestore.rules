@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Reglas de seguridad de Cloud Firestore para la app de recordatorios.
+//
+// Estructura de datos:  users/{uid}/reminders/{reminderId}
+//
+// La autorizacion se decide SIEMPRE aca, en el servidor. Ocultar o mostrar botones
+// en la interfaz no es un mecanismo de seguridad.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    // Solo el duenio de la cuenta puede tocar sus datos.
+    function esDuenio(uid) {
+      return autenticado() && request.auth.uid == uid;
+    }
+
+    // Validacion del contenido: el servidor no confia en lo que valida el cliente.
+    function recordatorioValido(d) {
+      return d.keys().hasOnly(['titulo', 'descripcion', 'categoria', 'prioridad', 'estado', 'fecha', 'actualizadoEn'])
+        && d.keys().hasAll(['titulo', 'categoria', 'prioridad', 'estado', 'fecha', 'actualizadoEn'])
+        && d.titulo is string && d.titulo.trim().size() >= 4 && d.titulo.size() <= 100
+        && (!('descripcion' in d) || d.descripcion == null
+            || (d.descripcion is string && d.descripcion.size() <= 200))
+        && d.categoria in ['ESTUDIO', 'TRABAJO', 'PERSONAL']
+        && d.prioridad in ['ALTA', 'MEDIA', 'BAJA']
+        && d.estado in ['PENDIENTE', 'COMPLETADO', 'CANCELADO']
+        && d.fecha is number
+        && d.actualizadoEn is number;
+    }
+
+    match /users/{uid}/reminders/{reminderId} {
+      allow read: if esDuenio(uid);
+      allow create, update: if esDuenio(uid) && recordatorioValido(request.resource.data);
+      allow delete: if esDuenio(uid);
+    }
+
+    // Todo lo demas queda cerrado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

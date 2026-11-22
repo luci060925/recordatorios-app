@@ -19,3 +19,6 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Conserva numeros de linea para poder leer los reportes de errores de los testers.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
