@@ -15,7 +15,7 @@ sealed interface EstadoEnvio {
 }
 
 /**
- * Estado inmutable del formulario de creacion: valores actuales, mensajes
+ * Estado inmutable del formulario (crear o editar): valores actuales, mensajes
  * de validacion y estado del envio. Cada cambio produce una nueva instancia.
  */
 data class FormularioUiState(
@@ -26,8 +26,15 @@ data class FormularioUiState(
     // Pasa a true cuando la persona modifica algun campo, para no mostrar
     // errores antes de que empiece a completar el formulario.
     val interactuado: Boolean = false,
-    val estadoEnvio: EstadoEnvio = EstadoEnvio.Inactivo
+    val estadoEnvio: EstadoEnvio = EstadoEnvio.Inactivo,
+    /** Identificador del recordatorio que se edita; null cuando se esta creando uno nuevo. */
+    val idEditando: String? = null,
+    /** true mientras se carga el registro a editar. */
+    val cargando: Boolean = false
 ) {
+    val modoEdicion: Boolean
+        get() = idEditando != null
+
     val tituloValido: Boolean
         get() = titulo.trim().length >= LONGITUD_MINIMA_TITULO
     val descripcionValida: Boolean
@@ -39,16 +46,16 @@ data class FormularioUiState(
 
     val errorTitulo: String?
         get() = if (interactuado && !tituloValido) {
-            "El titulo debe tener al menos $LONGITUD_MINIMA_TITULO caracteres."
+            "El título debe tener al menos $LONGITUD_MINIMA_TITULO caracteres."
         } else null
     val errorDescripcion: String?
         get() = if (!descripcionValida) {
-            "La descripcion no puede superar los $LONGITUD_MAXIMA_DESCRIPCION caracteres."
+            "La descripción no puede superar los $LONGITUD_MAXIMA_DESCRIPCION caracteres."
         } else null
     val errorCategoria: String?
-        get() = if (interactuado && !categoriaValida) "Selecciona una categoria." else null
+        get() = if (interactuado && !categoriaValida) "Seleccioná una categoría." else null
     val errorPrioridad: String?
-        get() = if (interactuado && !prioridadValida) "Selecciona una prioridad." else null
+        get() = if (interactuado && !prioridadValida) "Seleccioná una prioridad." else null
 
     val formularioValido: Boolean
         get() = tituloValido && descripcionValida && categoriaValida && prioridadValida
@@ -57,7 +64,7 @@ data class FormularioUiState(
 
     /** El boton de guardado se habilita solo con formulario valido y sin envio en curso. */
     val puedeGuardar: Boolean
-        get() = formularioValido && !enviando && estadoEnvio != EstadoEnvio.Exito
+        get() = formularioValido && !cargando && !enviando && estadoEnvio != EstadoEnvio.Exito
 }
 
 val OPCIONES_CATEGORIA: List<Categoria> =

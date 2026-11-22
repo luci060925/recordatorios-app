@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mansilla.recordatoriosapp.Categoria
@@ -37,6 +38,7 @@ import com.mansilla.recordatoriosapp.Prioridad
 import com.mansilla.recordatoriosapp.nombreCategoria
 import com.mansilla.recordatoriosapp.nombrePrioridad
 import com.mansilla.recordatoriosapp.ui.components.CampoTexto
+import com.mansilla.recordatoriosapp.ui.components.IndicadorCarga
 import com.mansilla.recordatoriosapp.ui.components.SelectorOpciones
 import com.mansilla.recordatoriosapp.ui.state.EstadoEnvio
 import com.mansilla.recordatoriosapp.ui.state.FormularioUiState
@@ -44,20 +46,26 @@ import com.mansilla.recordatoriosapp.ui.state.LONGITUD_MAXIMA_DESCRIPCION
 import com.mansilla.recordatoriosapp.ui.state.LONGITUD_MINIMA_TITULO
 import com.mansilla.recordatoriosapp.ui.state.OPCIONES_CATEGORIA
 import com.mansilla.recordatoriosapp.ui.state.OPCIONES_PRIORIDAD
-import com.mansilla.recordatoriosapp.ui.viewmodel.RecordatoriosViewModel
-import com.mansilla.recordatoriosapp.ui.viewmodel.RecordatoriosViewModelFactory
+import com.mansilla.recordatoriosapp.ui.viewmodel.FormularioViewModel
 
-/** Punto de entrada con estado: conecta el formulario con el ViewModel. */
+/**
+ * Punto de entrada con estado. Sirve para crear (recordatorioId = null) y para
+ * editar un recordatorio existente.
+ */
 @Composable
 fun PantallaCrear(
-    viewModelFactory: RecordatoriosViewModelFactory,
+    recordatorioId: String?,
+    viewModelFactory: ViewModelProvider.Factory,
     onCancelar: () -> Unit,
     onGuardadoExitoso: () -> Unit
 ) {
-    val viewModel: RecordatoriosViewModel = viewModel(factory = viewModelFactory)
+    val viewModel: FormularioViewModel = viewModel(factory = viewModelFactory)
     val estado by viewModel.formularioState.collectAsStateWithLifecycle()
 
-    // Resultado del envio: al guardar con exito se vuelve al listado.
+    LaunchedEffect(recordatorioId) {
+        if (recordatorioId != null) viewModel.cargarParaEditar(recordatorioId)
+    }
+    // Resultado del envío: al guardar con éxito se vuelve a la pantalla anterior.
     LaunchedEffect(estado.estadoEnvio) {
         if (estado.estadoEnvio == EstadoEnvio.Exito) onGuardadoExitoso()
     }
@@ -90,7 +98,7 @@ fun FormularioRecordatorio(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("Nuevo recordatorio") },
+                title = { Text(if (estado.modoEdicion) "Editar recordatorio" else "Nuevo recordatorio") },
                 navigationIcon = {
                     IconButton(onClick = onCancelar) {
                         Icon(
@@ -102,6 +110,14 @@ fun FormularioRecordatorio(
             )
         }
     ) { innerPadding ->
+        if (estado.cargando) {
+            IndicadorCarga(
+                modifier = Modifier.padding(innerPadding),
+                mensaje = "Cargando recordatorio..."
+            )
+            return@Scaffold
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -113,20 +129,20 @@ fun FormularioRecordatorio(
             CampoTexto(
                 valor = estado.titulo,
                 onValorChange = onTituloChange,
-                etiqueta = "Titulo",
+                etiqueta = "Título",
                 mensajeError = estado.errorTitulo,
-                ayuda = "Minimo $LONGITUD_MINIMA_TITULO caracteres"
+                ayuda = "Mínimo $LONGITUD_MINIMA_TITULO caracteres"
             )
             CampoTexto(
                 valor = estado.descripcion,
                 onValorChange = onDescripcionChange,
-                etiqueta = "Descripcion (opcional)",
+                etiqueta = "Descripción (opcional)",
                 mensajeError = estado.errorDescripcion,
                 ayuda = "${estado.descripcion.length}/$LONGITUD_MAXIMA_DESCRIPCION",
                 minLineas = 3
             )
             SelectorOpciones(
-                titulo = "Categoria",
+                titulo = "Categoría",
                 opciones = OPCIONES_CATEGORIA,
                 seleccionada = estado.categoria,
                 nombreOpcion = ::nombreCategoria,
@@ -145,7 +161,7 @@ fun FormularioRecordatorio(
             // Error general de guardado
             if (estado.estadoEnvio is EstadoEnvio.Error) {
                 Text(
-                    text = "Error: ${estado.estadoEnvio.mensaje} Podes intentar nuevamente.",
+                    text = "Error: ${estado.estadoEnvio.mensaje}",
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive }
                 )
@@ -169,7 +185,7 @@ fun FormularioRecordatorio(
                     Text(
                         when {
                             estado.enviando -> "Guardando..."
-                            estado.estadoEnvio is EstadoEnvio.Error -> "Reintentar guardado"
+                            estado.modoEdicion -> "Guardar cambios"
                             else -> "Guardar recordatorio"
                         }
                     )
