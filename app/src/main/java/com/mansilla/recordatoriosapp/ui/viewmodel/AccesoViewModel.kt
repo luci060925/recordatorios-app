@@ -22,6 +22,17 @@ class AccesoViewModel(
 
     private val formulario = MutableStateFlow(AccesoUiState())
 
+    init {
+        // Al iniciar sesion se descarta todo lo escrito (correo, modo, errores): este ViewModel vive
+        // mientras vive la Activity, y la persona que use el dispositivo despues no debe ver nada
+        // de la anterior en la pantalla de acceso.
+        viewModelScope.launch {
+            auth.estado.collect { sesion ->
+                if (sesion is EstadoAuth.ConSesion) formulario.value = AccesoUiState()
+            }
+        }
+    }
+
     val estado: StateFlow<AccesoUiState> =
         combine(formulario, auth.estado) { campos, sesion ->
             campos.copy(sesionExpirada = (sesion as? EstadoAuth.SinSesion)?.expirada == true)

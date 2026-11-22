@@ -161,4 +161,25 @@ class AccesoViewModelTest {
         assertEquals(EstadoAuth.SinSesion(expirada = true), sesion.estado.value)
         assertTrue(vm.estado.value.sesionExpirada)
     }
+
+    @Test
+    fun alIniciarSesion_seDescartaElFormularioParaLaSiguientePersona() = runTest {
+        val vm = crear()
+        vm.cambiarEmail("ana@test.com")
+        vm.cambiarContrasena("secreta1")
+        advanceUntilIdle()
+        assertEquals("ana@test.com", vm.estado.value.email)
+
+        // Se inicia sesion (cambia el estado de autenticacion) y luego se cierra.
+        sesion.iniciar("ana")
+        advanceUntilIdle()
+        sesion.cerrar()
+        advanceUntilIdle()
+
+        // La pantalla de acceso vuelve vacia: no queda el correo de la sesion anterior.
+        assertEquals("", vm.estado.value.email)
+        assertEquals("", vm.estado.value.contrasena)
+        assertNull(vm.estado.value.error)
+        assertEquals(ModoAcceso.INICIAR_SESION, vm.estado.value.modo)
+    }
 }

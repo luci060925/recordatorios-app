@@ -17,10 +17,16 @@ val appVersionName = project.property("APP_VERSION_NAME") as String
 
 // Identifica el codigo exacto con el que se genero cada artefacto (para relacionar reportes de testers).
 fun gitDescribe(): String = try {
-    providers.exec {
-        commandLine("git", "describe", "--always", "--dirty")
+    val commit = providers.exec {
+        commandLine("git", "describe", "--always")
         isIgnoreExitValue = true
     }.standardOutput.asText.get().trim().ifEmpty { "sin-git" }
+    // Cambios sin commitear en archivos versionados (se ignora la configuracion del IDE).
+    val cambios = providers.exec {
+        commandLine("git", "status", "--porcelain", "--untracked-files=no", "--", ".", ":!.idea")
+        isIgnoreExitValue = true
+    }.standardOutput.asText.get().trim()
+    if (cambios.isEmpty()) commit else "$commit-dirty"
 } catch (e: Exception) {
     "sin-git"
 }
