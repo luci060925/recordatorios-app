@@ -81,14 +81,16 @@ class FirebaseAuthRepository(
             ResultadoVerificacion.VALIDA
         } catch (e: CancellationException) {
             throw e
-        } catch (e: FirebaseNetworkException) {
-            ResultadoVerificacion.NO_VERIFICABLE
-        } catch (e: FirebaseAuthInvalidUserException) {
-            invalidarSesion()
-        } catch (e: FirebaseAuthInvalidCredentialsException) {
-            invalidarSesion()
         } catch (e: Exception) {
-            ResultadoVerificacion.NO_VERIFICABLE
+            when {
+                // Sin red no se puede saber: se conserva la sesion.
+                e is FirebaseNetworkException || e.esErrorDeRed() -> ResultadoVerificacion.NO_VERIFICABLE
+                // El servicio rechazo la credencial (cuenta eliminada, deshabilitada o token invalido).
+                e is FirebaseAuthInvalidUserException ||
+                    e is FirebaseAuthInvalidCredentialsException ||
+                    e.indicaSesionInvalida() -> invalidarSesion()
+                else -> ResultadoVerificacion.NO_VERIFICABLE
+            }
         }
     }
 

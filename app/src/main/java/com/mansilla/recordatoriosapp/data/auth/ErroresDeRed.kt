@@ -20,3 +20,29 @@ fun Throwable.esErrorDeRed(): Boolean =
         }
 
 private const val PROFUNDIDAD_MAXIMA = 6
+
+/**
+ * Indica si un fallo del servicio de autenticacion significa que la cuenta o su credencial ya no son
+ * validas (cuenta eliminada o deshabilitada, token de renovacion invalido o vencido).
+ *
+ * El SDK informa estos casos con distintos tipos de excepcion segun el servicio; por eso tambien se
+ * reconoce el codigo del servicio que viaja en el mensaje.
+ */
+fun Throwable.indicaSesionInvalida(): Boolean =
+    generateSequence(this) { it.cause }
+        .take(PROFUNDIDAD_MAXIMA)
+        .any { causa ->
+            val mensaje = causa.message.orEmpty()
+            CODIGOS_SESION_INVALIDA.any { codigo -> mensaje.contains(codigo, ignoreCase = true) }
+        }
+
+private val CODIGOS_SESION_INVALIDA = listOf(
+    "INVALID_REFRESH_TOKEN",
+    "TOKEN_EXPIRED",
+    "USER_NOT_FOUND",
+    "USER_DISABLED",
+    "USER_TOKEN_EXPIRED",
+    "INVALID_USER_TOKEN",
+    "CREDENTIAL_TOO_OLD",
+    "The user's credential is no longer valid"
+)
