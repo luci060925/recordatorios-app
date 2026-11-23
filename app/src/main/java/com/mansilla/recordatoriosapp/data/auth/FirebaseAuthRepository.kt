@@ -107,6 +107,7 @@ class FirebaseAuthRepository(
             else TipoErrorAuth.CREDENCIALES_INVALIDAS
         is FirebaseNetworkException -> TipoErrorAuth.SIN_CONEXION
         is FirebaseTooManyRequestsException -> TipoErrorAuth.DEMASIADOS_INTENTOS
-        else -> TipoErrorAuth.DESCONOCIDO
+        // Cualquier otro fallo causado por la red (por ejemplo, red inalcanzable) se informa como falta de conexion.
+        else -> if (e.esErrorDeRed()) TipoErrorAuth.SIN_CONEXION else TipoErrorAuth.DESCONOCIDO
     }
 }
